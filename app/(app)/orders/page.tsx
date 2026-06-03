@@ -47,6 +47,26 @@ export default function OrdersPage() {
     }
   }
 
+  const unconfirmPayment = async (id: string) => {
+    if (!confirm('Hủy xác nhận thanh toán? Hoa hồng sẽ bị thu hồi.')) return
+    const res = await fetch(`/api/orders/${id}/unconfirm`, { method: 'POST' })
+    if (res.ok) {
+      const updated = await res.json()
+      setOrders(prev => prev.map(o => o.id === id ? { ...o, ...updated } : o))
+    }
+  }
+
+  const deleteOrder = async (id: string) => {
+    if (!confirm('Xóa đơn hàng này?')) return
+    const res = await fetch(`/api/orders/${id}`, { method: 'DELETE' })
+    if (res.ok) {
+      setOrders(prev => prev.filter(o => o.id !== id))
+    } else {
+      const d = await res.json()
+      alert(d.error)
+    }
+  }
+
   const filtered = orders.filter(o => filter === 'ALL' || o.paymentStatus === filter)
 
   return (
@@ -149,12 +169,17 @@ export default function OrdersPage() {
                   </td>
                   {role === 'ADMIN' && (
                     <td className="table-cell text-center">
-                      {o.paymentStatus === 'UNPAID' && (
-                        <button onClick={() => confirmPayment(o.id)} className="btn-success text-xs px-3 py-1">✓ Xác nhận TT</button>
-                      )}
-                      {o.paymentStatus === 'PAID' && (
-                        <span className="text-xs text-gray-400">{o.paidAt ? new Date(o.paidAt).toLocaleDateString('vi-VN') : ''}</span>
-                      )}
+                      <div className="flex gap-1 justify-center">
+                        {o.paymentStatus === 'UNPAID' && (
+                          <>
+                            <button onClick={() => confirmPayment(o.id)} className="text-xs bg-green-50 text-green-700 hover:bg-green-100 px-2 py-1 rounded-lg font-medium transition-colors">✓ Xác nhận TT</button>
+                            <button onClick={() => deleteOrder(o.id)} className="text-xs bg-red-50 text-red-600 hover:bg-red-100 px-2 py-1 rounded-lg font-medium transition-colors">🗑 Xóa</button>
+                          </>
+                        )}
+                        {o.paymentStatus === 'PAID' && (
+                          <button onClick={() => unconfirmPayment(o.id)} className="text-xs bg-orange-50 text-orange-600 hover:bg-orange-100 px-2 py-1 rounded-lg font-medium transition-colors">↩ Hủy TT</button>
+                        )}
+                      </div>
                     </td>
                   )}
                 </tr>
