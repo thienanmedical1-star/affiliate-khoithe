@@ -8,14 +8,12 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     await requireAdmin()
     const { id } = await params
     const order = await prisma.order.findUnique({ where: { id } })
-    if (!order) return NextResponse.json({ error: 'Không tìm thấy' }, { status: 404 })
-    if (order.paymentStatus === 'PAID') {
-      return NextResponse.json({ error: 'Không thể xóa đơn đã thanh toán. Hãy hủy thanh toán trước.' }, { status: 400 })
-    }
+    if (!order) return NextResponse.json({ error: 'Không tìm thấy đơn hàng' }, { status: 404 })
+    // Force delete regardless of payment status
     await prisma.order.delete({ where: { id } })
-    await createAuditLog({ orderId: id, action: 'DELETE_ORDER', note: 'Xóa đơn hàng' })
+    await createAuditLog({ action: 'DELETE_ORDER', note: `Xóa đơn - trạng thái: ${order.paymentStatus}` })
     return NextResponse.json({ success: true })
-  } catch {
-    return NextResponse.json({ error: 'Lỗi' }, { status: 500 })
+  } catch (e: any) {
+    return NextResponse.json({ error: 'Lỗi: ' + e.message }, { status: 500 })
   }
 }
