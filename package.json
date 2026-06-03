@@ -13,7 +13,7 @@
     "@prisma/client": "^5.22.0",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
-    "next": "15.3.3",
+    "next": "^15.5.19",
     "pusher": "^5.2.0",
     "pusher-js": "^8.4.0",
     "qrcode": "^1.5.4",
@@ -30,7 +30,7 @@
     "@types/react-dom": "^19",
     "@types/speakeasy": "^2.0.10",
     "eslint": "^9",
-    "eslint-config-next": "15.3.3",
+    "eslint-config-next": "^15.3.8",
     "prisma": "^5.22.0",
     "ts-node": "^10.9.2",
     "typescript": "^5"
