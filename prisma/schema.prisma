@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  username      String   @unique
+  password      String
+  name          String
+  email         String?
+  role          Role     @default(AFFILIATE)
+  affiliateCode String?  @unique
+  commission    Float    @default(0)
+  isActive      Boolean  @default(true)
+  twoFactorSecret  String?
+  twoFactorEnabled Boolean @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  customers          Customer[]
+  orders             Order[]
+  commissionPayments CommissionPayment[]
+  auditLogs          AuditLog[]
+}
+
+model Customer {
+  id           String         @id @default(cuid())
+  name         String
+  phone        String
+  email        String?
+  affiliateId  String
+  affiliate    User           @relation(fields: [affiliateId], references: [id])
+  status       CustomerStatus @default(NEW)
+  registeredAt DateTime       @default(now())
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  orders    Order[]
+  auditLogs AuditLog[]
+}
+
+model Package {
+  id        String   @id @default(cuid())
+  name      String
+  price     Float
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  customerId      String
+  customer        Customer      @relation(fields: [customerId], references: [id])
+  affiliateId     String
+  affiliate       User          @relation(fields: [affiliateId], references: [id])
+  packageId       String?
+  package         Package?      @relation(fields: [packageId], references: [id])
+  price           Float
+  customPrice     Boolean       @default(false)
+  customPriceNote String?
+  commission      Float         @default(0)
+  commissionRate  Float
+  paymentStatus   PaymentStatus @default(UNPAID)
+  paidAt          DateTime?
+  confirmedBy     String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  auditLogs AuditLog[]
+}
+
+model CommissionPayment {
+  id          String   @id @default(cuid())
+  affiliateId String
+  affiliate   User     @relation(fields: [affiliateId], references: [id])
+  amount      Float
+  note        String?
+  paidAt      DateTime @default(now())
+  createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id         String    @id @default(cuid())
+  userId     String?
+  user       User?     @relation(fields: [userId], references: [id])
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+  orderId    String?
+  order      Order?    @relation(fields: [orderId], references: [id])
+  action     String
+  target     String?
+  oldValue   String?
+  newValue   String?
+  note       String?
+  createdAt  DateTime  @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  type      String   @default("info")
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  ADMIN
+  AFFILIATE
+}
+
+enum CustomerStatus {
+  NEW
+  CONSULTING
+  CLOSED
+  REJECTED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+}
